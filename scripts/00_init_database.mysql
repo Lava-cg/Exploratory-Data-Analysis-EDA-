@@ -1,0 +1,61 @@
+--  This script purpose is creating new database DataWarehouseAnalytics
+-- Creating dimension and fact tables 
+-- Inserting values into tables
+   
+   
+-- Create the 'DataWarehouseAnalytics' database
+
+CREATE DATABASE DataWarehouseAnalytics;
+
+
+-- Creating dimension and fact tables for customer, products, and facts
+-- Inserting values into tables
+
+CREATE TABLE datawarehouseanalytics.gold_dim_customers (
+customer_key bigint UNIQUE,
+customer_id int,
+customer_number varchar(50),
+first_name varchar(50),
+last_name VARCHAR(50),
+country VARCHAR(50),
+marital_status VARCHAR(50),
+gender VARCHAR(50),
+birthdate date,
+create_date DATE
+);
+
+INSERT INTO datawarehouseanalytics.gold_dim_customers SELECT * from datawarehouse.gold_dim_customers;
+
+
+
+CREATE TABLE datawarehouseanalytics.gold_dim_customers;
+
+CREATE TABLE datawarehouseanalytics.gold_dim_products (
+product_key bigint UNIQUE,
+product_id int,
+product_number VARCHAR(50),
+product_name VARCHAR(50),
+category_id VARCHAR(50),
+category VARCHAR(50),
+subcategory VARCHAR(50),
+maintenance VARCHAR(50),
+cost int,
+product_line VARCHAR(50),
+start_date DATE
+);
+
+INSERT INTO datawarehouseanalytics.gold_dim_products SELECT * from datawarehouse.gold_dim_products;
+
+CREATE TABLE datawarehouseanalytics.gold_fact_sales (
+order_number VARCHAR(50),
+product_key BIGINT,
+customer_key BIGINT,
+order_date DATE,
+shipping_date DATE,
+due_date DATE,
+sales_amount INT,
+quantity INT,
+price INT
+);
+
+INSERT INTO datawarehouseanalytics.gold_fact_sales SELECT * from datawarehouse.gold_fact_sales;
