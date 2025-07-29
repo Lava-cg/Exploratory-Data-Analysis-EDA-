@@ -1,0 +1,45 @@
+/*
+===============================================================================
+Performance Analysis (Year-over-Year, Month-over-Month)
+===============================================================================
+Purpose:
+    - To measure the performance of products, customers, or regions over time.
+    - For benchmarking and identifying high-performing entities.
+    - To track yearly trends and growth.
+
+SQL Functions Used:
+    - LAG(): Accesses data from previous rows.
+    - AVG() OVER(): Computes average values within partitions.
+    - CASE: Defines conditional logic for trend analysis.
+===============================================================================
+*/
+
+WITH  yearly_sales_summary AS (
+SELECT 
+	YEAR(f.order_date) as order_Date, 
+    p.product_name as product_name,
+    sum(f.sales_amount) as current_sales
+    
+FROM gold_fact_sales f
+LEFT JOIN gold_dim_products p
+ON  f.product_key = p.product_key
+GROUP BY  YEAR(f.order_date), p.product_name
+)
+
+select 
+order_Date,
+product_name,
+current_sales,
+round(avg(current_sales) over (PARTITION BY product_name order by order_Date))as avg_sales,
+current_sales - round(avg(current_sales) over (PARTITION BY product_name order by order_Date)) as avg_sales_difference,
+
+--- year-over-year anyalysis 
+
+LAG( current_sales, 1) over(PARTITION BY product_name ORDER BY order_date) as prev_sales,
+current_sales - LAG( current_sales, 1) over(PARTITION BY product_name ORDER BY order_date)as sales_performance,
+CASE 
+WHEN current_sales - lag( current_sales, 1) over(PARTITION BY product_name ORDER BY order_date)   > 0 then 'Increased'
+WHEN current_sales - lag( current_sales, 1) over(PARTITION BY product_name ORDER BY order_date)  < 0 then 'Decreased'
+ELSE 'N/A'
+END as perforamce
+FROM yearly_sales_summary;
