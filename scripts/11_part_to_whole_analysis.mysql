@@ -1,0 +1,73 @@
+/*
+===============================================================================
+Part-to-Whole Analysis
+===============================================================================
+Purpose:
+    - To compare performance or metrics across dimensions or time periods.
+    - To evaluate differences between categories.
+    - Useful for A/B testing or regional comparisons.
+
+SQL Functions Used:
+    - SUM(), AVG(): Aggregates values for comparison.
+    - Window Functions: SUM() OVER() for total calculations.
+===============================================================================
+*/
+
+-- task -- which category contributee the most to overall sales
+
+WITH category_sales AS (
+SELECT 
+p.category as category, 
+sum(f.sales_amount) as total_sales
+from gold_fact_sales f
+left join gold_dim_products p
+on f.product_key = p.product_key
+group by category
+
+)
+
+SELECT 
+category,
+total_sales,
+SUM(total_sales) OVER() AS over_all_sales,
+concat((round(total_sales / SUM(total_sales) OVER() * 100, 2)),  '% ')as perchant
+FROM category_sales;
+
+-- task -- which product contributee the most to overall sales
+----
+WITH product_percentage AS (
+SELECT 
+P.product_name as product_name,
+p.category as category, 
+sum(f.sales_amount) as total_sales
+from gold_fact_sales f
+left join gold_dim_products p
+on f.product_key = p.product_key
+GROUP BY  p.category, P.product_name
+ORDER BY  p.category, P.product_name
+)
+
+, ranking as 
+(
+SELECT 
+product_name,
+category,
+total_sales,
+SUM(total_sales) over() as over_all_sales,
+CONCAT(ROUND(total_sales / sum(total_sales) over() * 100, 2 ), '%')as percent_p
+from product_percentage
+ORDER BY percent_p desc, category desc
+)
+
+select * from 
+(
+SELECT 
+product_name,
+category, 
+total_sales,
+over_all_sales, 
+percent_p ,
+RANK() over (PARTITION BY category ORDER BY percent_p desc) as rank_p
+from ranking 
+)t
+where rank_p <= 5;
